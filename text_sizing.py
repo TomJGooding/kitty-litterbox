@@ -3,6 +3,8 @@
 MIN_SCALE = 1
 MAX_SCALE = 7
 
+MAX_BYTES = 4096
+
 
 def quickstart() -> None:
     print("\x1b]66;s=2;Double sized text\a\n\n", end="")
@@ -15,6 +17,13 @@ def quickstart() -> None:
 def print_big(text: str, scale: int, newline: bool = True) -> None:
     if scale < MIN_SCALE or scale > MAX_SCALE:
         raise ValueError(f"Scale must be between {MIN_SCALE} and {MAX_SCALE}")
+
+    # TODO: Escape code safe UTF-8 - which mean no newlines are allowed!
+    # https://sw.kovidgoyal.net/kitty/desktop-notifications/#safe-utf8
+
+    if len(text.encode("utf-8")) > MAX_BYTES:
+        # TODO: Longer strings must be broken up into multiple escape codes
+        raise ValueError(f"Text must be no longer than {MAX_BYTES} bytes")
 
     end = "\n" * scale if newline else ""
     print(f"\x1b]66;s={scale};{text}\a", end=end)
