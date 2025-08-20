@@ -29,7 +29,22 @@ def print_big(text: str, scale: int, newline: bool = True) -> None:
     print(f"\x1b]66;s={scale};{text}\a", end=end)
 
 
+def print_simple_superscript(text: str) -> None:
+    print(f"\x1b]66;n=1:d=2;{text}\a\n", end="")
+
+
+def print_compact_superscript(text: str) -> None:
+    # TODO: This assumes all characters have a width of one cell
+    pairs = [text[i : i + 2] for i in range(0, len(text), 2)]
+    for pair in pairs:
+        print(f"\x1b]66;n=1:d=2:w=1;{pair}\a", end="")
+    print()
+
+
 def main() -> None:
+    print_simple_superscript("simple superscript")
+    print_compact_superscript("compact superscript")
+
     for scale in range(MIN_SCALE, MAX_SCALE + 1):
         print_big(f"x{scale}", scale)
 
