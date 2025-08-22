@@ -64,20 +64,35 @@ def get_cursor_position() -> tuple[int, int]:
         raise ValueError(resp_str)
 
 
+def supports_text_sizing_protocol() -> bool:
+    print("\r", end="")
+    cur_before = get_cursor_position()
+
+    print("\x1b]66;w=2; \a", end="")
+    cur_after_width = get_cursor_position()
+    width_supported = cur_after_width[1] == cur_before[1] + 2
+
+    print("\x1b]66;s=2; \a", end="")
+    cur_after_scale = get_cursor_position()
+    scale_supported = cur_after_scale[1] == cur_after_width[1] + 2
+
+    return width_supported and scale_supported
+
+
 def main() -> None:
     # Put the terminal in 'cbreak mode' to allow reading terminal responses
     orig_attrs = tty.setcbreak(STDIN_FILENO, termios.TCSANOW)
 
-    print(get_cursor_position())
+    if not supports_text_sizing_protocol():
+        print("Sorry, your terminal doesn't support the text sizing protocol!")
+    else:
+        print_big("Text sizing protocol is supported!", scale=2)
 
-    # print_simple_superscript("simple superscript")
-    # print_compact_superscript("compact superscript")
-    #
-    # for scale in range(MIN_SCALE, MAX_SCALE + 1):
-    #     print_big(f"x{scale}", scale)
-    #
-    # for scale in range(MIN_SCALE, MAX_SCALE + 1):
-    #     print_big(f"x{scale}", scale, newline=False)
+        print_simple_superscript("simple superscript")
+        print_compact_superscript("compact superscript")
+
+        for scale in range(MIN_SCALE, MAX_SCALE + 1):
+            print_big(f"x{scale}", scale)
 
     # Restore the original terminal settings
     termios.tcsetattr(STDIN_FILENO, termios.TCSANOW, orig_attrs)
