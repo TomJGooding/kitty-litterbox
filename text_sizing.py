@@ -3,8 +3,8 @@ import re
 import sys
 import termios
 import tty
-
-STDIN_FILENO = sys.stdin.fileno()
+from contextlib import contextmanager
+from typing import Iterator
 
 MIN_SCALE = 1
 MAX_SCALE = 7
@@ -49,6 +49,17 @@ def print_compact_superscript(text: str) -> None:
     print()
 
 
+@contextmanager
+def terminal_cbreak_mode() -> Iterator[None]:
+    STDIN_FILENO = sys.stdin.fileno()
+
+    orig_attrs = tty.setcbreak(STDIN_FILENO, termios.TCSANOW)
+    try:
+        yield
+    finally:
+        termios.tcsetattr(STDIN_FILENO, termios.TCSANOW, orig_attrs)
+
+
 def get_cursor_position() -> tuple[int, int]:
     # Adapted from https://jwodder.github.io/kbits/posts/cursor-pos/
     print("\x1b[6n", end="", flush=True)
@@ -80,12 +91,11 @@ def supports_text_sizing_protocol() -> bool:
 
 
 def main() -> None:
-    # Put the terminal in 'cbreak mode' to allow reading terminal responses
-    orig_attrs = tty.setcbreak(STDIN_FILENO, termios.TCSANOW)
+    with terminal_cbreak_mode():
+        if not supports_text_sizing_protocol():
+            print("Sorry, your terminal doesn't support the text sizing protocol!")
+            exit(1)
 
-    if not supports_text_sizing_protocol():
-        print("Sorry, your terminal doesn't support the text sizing protocol!")
-    else:
         print_big("Text sizing protocol is supported!", scale=2)
 
         print_simple_superscript("simple superscript")
@@ -93,9 +103,6 @@ def main() -> None:
 
         for scale in range(MIN_SCALE, MAX_SCALE + 1):
             print_big(f"x{scale}", scale)
-
-    # Restore the original terminal settings
-    termios.tcsetattr(STDIN_FILENO, termios.TCSANOW, orig_attrs)
 
 
 if __name__ == "__main__":
