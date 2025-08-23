@@ -11,7 +11,7 @@ MAX_SCALE = 7
 
 MAX_BYTES = 4096
 
-RE_CURSOR_POSITION = re.compile(r"\x1b\[(?P<row>\d+);(?P<col>\d+)R")
+RE_CURSOR_POSITION = re.compile(r"\x1b\[(?P<line>\d+);(?P<col>\d+)R")
 
 
 def quickstart() -> None:
@@ -79,7 +79,7 @@ def get_cursor_position() -> tuple[int, int]:
 
     resp_str = resp.decode("utf-8", "surrogateescape")
     if match := RE_CURSOR_POSITION.fullmatch(resp_str):
-        return (int(match["row"]), int(match["col"]))
+        return (int(match["line"]), int(match["col"]))
     else:
         raise ValueError(resp_str)
 
@@ -95,6 +95,10 @@ def supports_text_sizing_protocol() -> bool:
     print("\x1b]66;s=2; \a", end="")
     cur_after_scale = get_cursor_position()
     scale_supported = cur_after_scale[1] == cur_after_width[1] + 2
+
+    # Clean up the output from this check
+    print(f"\x1b[{cur_before[0]};{cur_before[1]}H", end="")
+    print("\x1b[0J", end="")
 
     return width_supported and scale_supported
 
