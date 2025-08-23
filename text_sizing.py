@@ -22,7 +22,12 @@ def quickstart() -> None:
     print("\x1b]66;n=1:d=2:w=1;Ha\a\x1b]66;n=1:d=2:w=1;lf\a\n", end="")
 
 
-def print_big(text: str, scale: int, newline: bool = True) -> None:
+def print_big(
+    text: str,
+    scale: int,
+    bold: bool = False,
+    newline: bool = True,
+) -> None:
     if scale < MIN_SCALE or scale > MAX_SCALE:
         raise ValueError(f"Scale must be between {MIN_SCALE} and {MAX_SCALE}")
 
@@ -33,8 +38,12 @@ def print_big(text: str, scale: int, newline: bool = True) -> None:
         # TODO: Longer strings must be broken up into multiple escape codes
         raise ValueError(f"Text must be no longer than {MAX_BYTES} bytes")
 
+    rendered = f"\x1b]66;s={scale};{text}\a"
+    if bold:
+        rendered = f"\x1b[1m{rendered}\x1b[0m"
+
     end = "\n" * scale if newline else ""
-    print(f"\x1b]66;s={scale};{text}\a", end=end)
+    print(rendered, end=end)
 
 
 def print_simple_superscript(text: str) -> None:
@@ -96,7 +105,9 @@ def main() -> None:
             print("Sorry, your terminal doesn't support the text sizing protocol!")
             exit(1)
 
-        print_big("Text sizing protocol is supported!", scale=2)
+        print_big("Text sizing protocol is supported!", scale=3)
+
+        print_big("Big and bold text!", scale=3, bold=True)
 
         print_simple_superscript("simple superscript")
         print_compact_superscript("compact superscript")
